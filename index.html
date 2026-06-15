@@ -1,103 +1,204 @@
+<!-- 
+    ============================================
+    MOOD MIRROR - A Webpage That Uses Your Webcam!
+    ============================================
+    
+    This is a HTML file. HTML is like the "skeleton" of a webpage.
+    Everything you see in your browser started as code like this!
+    
+    Written for: Sasha learning to code
+    What it does: Shows your webcam and changes emojis when you click buttons
+-->
+
+<!-- 
+    <!DOCTYPE html> - This tells the browser "Hey, this is a modern HTML page"
+    It must be the VERY FIRST line of any HTML file
+-->
 <!DOCTYPE html>
+
+<!-- 
+    <html> - Everything inside here is part of the webpage
+    lang="en" means "English" (helps with screen readers and search engines)
+-->
 <html lang="en">
+
+<!-- 
+    <head> - The "thinking part" of the webpage
+    Nothing inside <head> is visible on the page itself
+    It contains instructions, styles, and information ABOUT the page
+-->
 <head>
+    <!-- 
+        <meta charset="UTF-8"> - This makes sure all characters (letters, emojis) display correctly
+        Without this, some symbols might look like garbage: �#@%
+    -->
     <meta charset="UTF-8">
+    
+    <!-- 
+        <meta name="viewport"> - This makes the page work on phones and tablets
+        content="width=device-width" means "make the page as wide as the screen"
+        Without this, mobile phones would show a tiny zoomed-out version
+    -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 
+        <title> - This text appears on the browser TAB (not on the page itself)
+        Try it! Look at the very top of your browser window
+    -->
     <title>Mood Mirror - Your Webcam Fun Studio</title>
+    
+    <!-- 
+        <style> - This is where all the COLORS and LAYOUT instructions live
+        This is called CSS (Cascading Style Sheets)
+        CSS answers: "How big? What color? Where on the screen?"
+        
+        Everything between /* and */ is a COMMENT - the computer ignores it
+        Comments are for humans to read and understand the code
+    -->
     <style>
+        /* 
+            * (the star) means "EVERYTHING on the page"
+            This resets all default margins and paddings to zero
+            Different browsers add different amounts of space by default
+            This makes them ALL start the same way
+        */
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0;      /* Removes space around the outside of elements */
+            padding: 0;     /* Removes space inside elements */
+            box-sizing: border-box;  /* Makes width calculations easier */
         }
 
+        /* 
+            body - This is the MAIN visible part of the webpage
+            Everything you see is inside the body
+        */
         body {
-            font-family: 'Courier New', monospace;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  
-            min-height: 100vh;
-            padding: 20px;
+            font-family: 'Courier New', monospace;  /* What font to use (Courier looks like old computer code) */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  /* A fancy gradient that fades from purple to darker purple */
+            min-height: 100vh;  /* Make the background fill at least the whole screen height (vh = viewport height) */
+            padding: 20px;      /* Add space around the inside edges */
         }
 
+        /* 
+            .container - The dot (.) means this is a CLASS
+            Classes let you style multiple things the same way
+            This container holds all the content in the middle
+        */
         .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 30px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            text-align: center;
+            max-width: 900px;    /* Don't get wider than 900 pixels */
+            margin: 0 auto;      /* Auto margins = center horizontally */
+            background: white;   /* White background inside the container */
+            border-radius: 30px; /* Round the corners */
+            padding: 30px;       /* Space inside the container */
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);  /* A shadow that makes it "float" above the background */
+            text-align: center;  /* Center everything inside (text, buttons, images) */
         }
 
+        /* 
+            h1 - This is a level 1 heading (biggest heading)
+            There can only be ONE h1 per page (for search engines)
+        */
         h1 {
-            color: #667eea;
-            font-size: 48px;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            color: #667eea;         /* A nice purple color (hex code for purple) */
+            font-size: 48px;        /* 48 pixels tall (pretty big!) */
+            margin-bottom: 10px;    /* Add space below the heading */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);  /* A subtle shadow effect */
         }
 
+        /* 
+            .subtitle - Another class (notice the dot)
+            This is for the smaller text under the main heading
+        */
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 18px;
+            color: #666;            /* A medium gray color */
+            margin-bottom: 30px;    /* Extra space below */
+            font-size: 18px;        /* 18 pixels tall */
         }
 
+        /* 
+            .webcam-section - A box that holds the webcam video
+        */
         .webcam-section {
-            background: #f0f0f0;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 30px;
+            background: #f0f0f0;    /* Light gray background */
+            border-radius: 20px;    /* Rounded corners */
+            padding: 20px;          /* Space inside */
+            margin-bottom: 30px;    /* Space below this section */
         }
 
+        /* 
+            video - This is the HTML tag that shows the webcam stream
+            No dot means we're styling the <video> tag directly
+        */
         video {
-            width: 100%;
-            max-width: 640px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            background: #333;
+            width: 100%;            /* Make it as wide as its container */
+            max-width: 640px;       /* But don't go wider than 640px */
+            border-radius: 15px;    /* Rounded corners */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);  /* Shadow effect */
+            background: #333;       /* Dark background while loading */
         }
 
+        /* 
+            .emoji-display - The big box where emojis appear
+        */
         .emoji-display {
-            font-size: 120px;
-            margin: 20px 0;
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 20px;
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
+            font-size: 120px;       /* HUGE text (120 pixels tall) */
+            margin: 20px 0;         /* 20px top and bottom, 0 left and right */
+            background: #f9f9f9;    /* Almost white background */
+            padding: 20px;          /* Space inside */
+            border-radius: 20px;    /* Rounded corners */
+            min-height: 200px;      /* At least 200px tall, even if empty */
+            display: flex;          /* Use flexbox layout */
+            align-items: center;    /* Center content vertically */
+            justify-content: center; /* Center content horizontally */
+            transition: all 0.3s ease;  /* Smooth animation when things change */
         }
 
+        /* 
+            .button-grid - A grid of buttons that automatically arranges them
+        */
         .button-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin: 30px 0;
+            display: grid;                      /* Use CSS Grid layout */
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));  /* Automatic columns that fit */
+            gap: 15px;                          /* Space between buttons */
+            margin: 30px 0;                     /* Space above and below */
         }
 
+        /* 
+            button - Styling for all <button> tags
+        */
         button {
-            padding: 15px 25px;
-            font-size: 20px;
-            font-weight: bold;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-family: 'Courier New', monospace;
+            padding: 15px 25px;     /* Space inside the button (top/bottom, left/right) */
+            font-size: 20px;        /* Text size */
+            font-weight: bold;      /* Make text thicker */
+            border: none;           /* Remove the default border */
+            border-radius: 50px;    /* Very round corners (pill shape) */
+            cursor: pointer;        /* Changes mouse to a hand when hovering */
+            transition: transform 0.2s, box-shadow 0.2s;  /* Smooth animation */
+            font-family: 'Courier New', monospace;  /* Match the rest of the page */
         }
 
+        /* 
+            button:hover - This style applies WHEN the mouse hovers over a button
+            The :hover is called a "pseudo-class"
+        */
         button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(-3px);    /* Move up 3 pixels */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);  /* Add a shadow */
         }
 
+        /* 
+            .btn-happy - Special class for the HAPPY button (yellow)
+            Different classes = different colors!
+        */
         .btn-happy { background: #FFD93D; color: #333; }
         .btn-sad { background: #6BCB77; color: white; }
         .btn-surprised { background: #FF6B6B; color: white; }
         .btn-robot { background: #4D96FF; color: white; }
         .btn-clear { background: #ddd; color: #333; }
 
+        /* 
+            .status - The little box that shows "Camera is on!" etc.
+        */
         .status {
             margin-top: 20px;
             padding: 10px;
@@ -107,6 +208,9 @@
             color: #555;
         }
 
+        /* 
+            footer - The bottom part of the page with tips
+        */
         footer {
             margin-top: 30px;
             font-size: 12px;
@@ -114,19 +218,52 @@
         }
     </style>
 </head>
+
+<!-- 
+    ============================================
+    <body> - THE VISIBLE PART OF THE WEBPAGE
+    ============================================
+    Everything between <body> and </body> is what you SEE and CLICK on
+-->
 <body>
+    <!-- 
+        <div> - A "division" or box that groups things together
+        class="container" - Uses the .container styles we defined above
+    -->
     <div class="container">
+        
+        <!-- Main heading -->
         <h1>📸 MOOD MIRROR</h1>
+        
+        <!-- Subtitle with sparkle emojis -->
         <div class="subtitle">✨ Click a button — change your mood! ✨</div>
 
+        <!-- 
+            Webcam section - This box holds the video
+        -->
         <div class="webcam-section">
+            <!-- 
+                <video> - This tag displays video
+                id="webcam" - Gives it a NAME so JavaScript can find it
+                autoplay - Start playing automatically
+                playsinline - Keep it inside the page (not fullscreen on phones)
+                width/height - How big the video should be
+            -->
             <video id="webcam" autoplay playsinline width="640" height="480"></video>
         </div>
 
+        <!-- 
+            The emoji display box
+            id="emojiDisplay" - So JavaScript can change what's inside
+        -->
         <div class="emoji-display" id="emojiDisplay">
-            🎭
+            🎭  <!-- This is the "theater masks" emoji - it will change when you click buttons -->
         </div>
 
+        <!-- 
+            Button grid - All the clickable buttons
+            onclick="setMood('happy')" - This calls a JavaScript function when clicked
+        -->
         <div class="button-grid">
             <button class="btn-happy" onclick="setMood('happy')">😊 HAPPY</button>
             <button class="btn-sad" onclick="setMood('sad')">😢 SAD</button>
@@ -135,100 +272,184 @@
             <button class="btn-clear" onclick="setMood('clear')">🗑️ CLEAR</button>
         </div>
 
+        <!-- 
+            Status box - Shows messages about the camera
+            id="status" - So JavaScript can update the text
+        -->
         <div class="status" id="status">
             ⏳ Waiting for camera...
         </div>
 
+        <!-- Footer with helpful tips -->
         <footer>
             💡 Tip: Click different buttons and watch the emoji change!<br>
             🎯 Next level: We'll add filters and effects!
         </footer>
     </div>
 
+    <!-- 
+        ============================================
+        <script> - JAVASCRIPT GOES HERE
+        ============================================
+        JavaScript is the "brain" of the webpage.
+        It makes things happen when you click, types, or move.
+        
+        HTML = Skeleton
+        CSS = Skin and clothes
+        JavaScript = Muscles and brains (makes things MOVE and RESPOND)
+    -->
     <script>
         // ============================================
-        // LEVEL 2: WEBCAM ACTIVATION
+        // PART 1: GET THE WEBCAM WORKING
         // ============================================
         
+        // This finds the <video> tag by its id="webcam"
+        // Think of it as "go find the video element and put it in a box labeled 'video'"
         const video = document.getElementById('webcam');
+        
+        // This finds the status div so we can change its text
         const statusDiv = document.getElementById('status');
         
-        // Ask for camera permission
+        // 
+        // IF - This checks if something is true
+        // navigator.mediaDevices - Does the browser have a camera?
+        // && means "AND" - both things must be true
+        // 
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            
+            // ASK for permission to use the camera
+            // .then() means "when that finishes, do this next thing"
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(function(stream) {
+                    // If the user said YES to the camera...
+                    
+                    // Take the video stream and put it into the <video> tag
                     video.srcObject = stream;
+                    
+                    // Change the status message to say it worked!
                     statusDiv.innerHTML = '✅ Camera is ON! Click buttons above.';
+                    
+                    // Change colors to green (success!)
                     statusDiv.style.background = '#d4edda';
                     statusDiv.style.color = '#155724';
                 })
                 .catch(function(error) {
-                    console.error('Camera error:', error);
+                    // If something went WRONG (user denied, no camera, etc.)
+                    // .catch() = "Oops, there was an error"
+                    
+                    console.error('Camera error:', error);  // Print error to developer console (invisible to user)
+                    
+                    // Show error message to the user
                     statusDiv.innerHTML = '❌ Camera not working. Check permissions!';
-                    statusDiv.style.background = '#f8d7da';
-                    statusDiv.style.color = '#721c24';
+                    statusDiv.style.background = '#f8d7da';  // Red-ish background
+                    statusDiv.style.color = '#721c24';      // Dark red text
                 });
         } else {
+            // If the browser doesn't support webcams at all (very rare on modern browsers)
             statusDiv.innerHTML = '❌ Your browser doesn\'t support webcam. Try Chrome or Edge.';
         }
 
         // ============================================
-        // LEVEL 3: MOOD BUTTONS (Emoji changer)
+        // PART 2: THE MOOD BUTTONS (What happens when you click)
         // ============================================
         
+        // Find the emoji display box by its id
         const emojiDisplay = document.getElementById('emojiDisplay');
         
+        // 
+        // This is a FUNCTION - a block of code that does something
+        // function setMood(mood) { ... }
+        // "setMood" is the name we made up
+        // (mood) is a "parameter" - it's whatever button sent (happy, sad, robot, etc.)
+        // 
         function setMood(mood) {
-            // Change emoji based on mood
+            
+            // SWITCH - Like a multi-way IF statement
+            // Check what "mood" is, and do different things for each
             switch(mood) {
-                case 'happy':
+                
+                case 'happy':  // If mood is "happy"
+                    // Change the text inside the emoji box
                     emojiDisplay.innerHTML = '😊✨ HAPPY! ✨😊';
+                    // Change the background color
                     emojiDisplay.style.background = '#FFE66D';
-                    break;
+                    break;  // Don't check any more cases - we're done
+                    
                 case 'sad':
                     emojiDisplay.innerHTML = '😢💧 SAD... 💧😢';
                     emojiDisplay.style.background = '#B8E0D2';
                     break;
+                    
                 case 'surprised':
                     emojiDisplay.innerHTML = '😲🤯 WHOA! 🤯😲';
                     emojiDisplay.style.background = '#FFB7B2';
                     break;
+                    
                 case 'robot':
                     emojiDisplay.innerHTML = '🤖🔧 BEEP BOOP 🔧🤖';
                     emojiDisplay.style.background = '#B5EAD7';
                     break;
+                    
                 case 'clear':
                     emojiDisplay.innerHTML = '🎭';
                     emojiDisplay.style.background = '#f9f9f9';
                     break;
-                default:
+                    
+                default:  // If none of the above match (just in case)
                     emojiDisplay.innerHTML = '🎭';
             }
             
-            // Bonus: Change page background color slightly based on mood
+            // ============================================
+            // BONUS: Change the whole page background based on mood
+            // ============================================
+            
+            // document.body refers to the whole page
             const body = document.body;
+            
+            // Another switch to change the background gradient
             switch(mood) {
                 case 'happy':
-                    body.style.background = 'linear-gradient(135deg, #FFD93D, #FFB347)';
+                    body.style.background = 'linear-gradient(135deg, #FFD93D, #FFB347)';  // Yellow to orange
                     break;
                 case 'sad':
-                    body.style.background = 'linear-gradient(135deg, #6BCB77, #4D96FF)';
+                    body.style.background = 'linear-gradient(135deg, #6BCB77, #4D96FF)';  // Green to blue
                     break;
                 case 'surprised':
-                    body.style.background = 'linear-gradient(135deg, #FF6B6B, #FF8E53)';
+                    body.style.background = 'linear-gradient(135deg, #FF6B6B, #FF8E53)';  // Red to orange
                     break;
                 case 'robot':
-                    body.style.background = 'linear-gradient(135deg, #4D96FF, #6C63FF)';
+                    body.style.background = 'linear-gradient(135deg, #4D96FF, #6C63FF)';  // Blue to purple
                     break;
                 default:
-                    body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';  // Original purple
             }
         }
         
-        // Add a fun animation when page loads
+        // ============================================
+        // PART 3: FUN STARTUP MESSAGE
+        // ============================================
+        
+        // setTimeout - Run this code AFTER a delay (1000 milliseconds = 1 second)
+        // This changes the status message to be more exciting
         setTimeout(function() {
             statusDiv.innerHTML = '🎉 Ready! Click HAPPY, SAD, or ROBOT! 🎉';
-        }, 1000);
+        }, 1000);  // 1000 = 1 second delay
+        
+        // 
+        // WHAT HAVE YOU LEARNED?
+        // ======================
+        // 1. HTML tags: <html>, <head>, <body>, <div>, <button>, <video>
+        // 2. CSS styling: colors, sizes, shadows, hover effects
+        // 3. JavaScript: functions, if/switch statements, finding elements, changing content
+        // 4. Webcam API: getUserMedia() asks for camera permission
+        // 
+        // WHAT CAN YOU TRY NEXT?
+        // =======================
+        // - Add a new button with your own emoji
+        // - Change the colors of existing buttons
+        // - Make the emoji text say something funny
+        // - Add a sound effect when clicking buttons (advanced)
+        //
     </script>
 </body>
 </html>
