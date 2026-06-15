@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Mirror - Your Webcam Fun Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .webcam-section {
+            background: #f0f0f0;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        video {
+            width: 100%;
+            max-width: 640px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: #333;
+        }
+
+        .emoji-display {
+            font-size: 120px;
+            margin: 20px 0;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 20px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        button {
+            padding: 15px 25px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Courier New', monospace;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-happy { background: #FFD93D; color: #333; }
+        .btn-sad { background: #6BCB77; color: white; }
+        .btn-surprised { background: #FF6B6B; color: white; }
+        .btn-robot { background: #4D96FF; color: white; }
+        .btn-clear { background: #ddd; color: #333; }
+
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 MOOD MIRROR</h1>
+        <div class="subtitle">✨ Click a button — change your mood! ✨</div>
+
+        <div class="webcam-section">
+            <video id="webcam" autoplay playsinline width="640" height="480"></video>
+        </div>
+
+        <div class="emoji-display" id="emojiDisplay">
+            🎭
+        </div>
+
+        <div class="button-grid">
+            <button class="btn-happy" onclick="setMood('happy')">😊 HAPPY</button>
+            <button class="btn-sad" onclick="setMood('sad')">😢 SAD</button>
+            <button class="btn-surprised" onclick="setMood('surprised')">😲 WOW!</button>
+            <button class="btn-robot" onclick="setMood('robot')">🤖 ROBOT</button>
+            <button class="btn-clear" onclick="setMood('clear')">🗑️ CLEAR</button>
+        </div>
+
+        <div class="status" id="status">
+            ⏳ Waiting for camera...
+        </div>
+
+        <footer>
+            💡 Tip: Click different buttons and watch the emoji change!<br>
+            🎯 Next level: We'll add filters and effects!
+        </footer>
+    </div>
+
+    <script>
+        // ============================================
+        // LEVEL 2: WEBCAM ACTIVATION
+        // ============================================
+        
+        const video = document.getElementById('webcam');
+        const statusDiv = document.getElementById('status');
+        
+        // Ask for camera permission
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    video.srcObject = stream;
+                    statusDiv.innerHTML = '✅ Camera is ON! Click buttons above.';
+                    statusDiv.style.background = '#d4edda';
+                    statusDiv.style.color = '#155724';
+                })
+                .catch(function(error) {
+                    console.error('Camera error:', error);
+                    statusDiv.innerHTML = '❌ Camera not working. Check permissions!';
+                    statusDiv.style.background = '#f8d7da';
+                    statusDiv.style.color = '#721c24';
+                });
+        } else {
+            statusDiv.innerHTML = '❌ Your browser doesn\'t support webcam. Try Chrome or Edge.';
+        }
+
+        // ============================================
+        // LEVEL 3: MOOD BUTTONS (Emoji changer)
+        // ============================================
+        
+        const emojiDisplay = document.getElementById('emojiDisplay');
+        
+        function setMood(mood) {
+            // Change emoji based on mood
+            switch(mood) {
+                case 'happy':
+                    emojiDisplay.innerHTML = '😊✨ HAPPY! ✨😊';
+                    emojiDisplay.style.background = '#FFE66D';
+                    break;
+                case 'sad':
+                    emojiDisplay.innerHTML = '😢💧 SAD... 💧😢';
+                    emojiDisplay.style.background = '#B8E0D2';
+                    break;
+                case 'surprised':
+                    emojiDisplay.innerHTML = '😲🤯 WHOA! 🤯😲';
+                    emojiDisplay.style.background = '#FFB7B2';
+                    break;
+                case 'robot':
+                    emojiDisplay.innerHTML = '🤖🔧 BEEP BOOP 🔧🤖';
+                    emojiDisplay.style.background = '#B5EAD7';
+                    break;
+                case 'clear':
+                    emojiDisplay.innerHTML = '🎭';
+                    emojiDisplay.style.background = '#f9f9f9';
+                    break;
+                default:
+                    emojiDisplay.innerHTML = '🎭';
+            }
+            
+            // Bonus: Change page background color slightly based on mood
+            const body = document.body;
+            switch(mood) {
+                case 'happy':
+                    body.style.background = 'linear-gradient(135deg, #FFD93D, #FFB347)';
+                    break;
+                case 'sad':
+                    body.style.background = 'linear-gradient(135deg, #6BCB77, #4D96FF)';
+                    break;
+                case 'surprised':
+                    body.style.background = 'linear-gradient(135deg, #FF6B6B, #FF8E53)';
+                    break;
+                case 'robot':
+                    body.style.background = 'linear-gradient(135deg, #4D96FF, #6C63FF)';
+                    break;
+                default:
+                    body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }
+        }
+        
+        // Add a fun animation when page loads
+        setTimeout(function() {
+            statusDiv.innerHTML = '🎉 Ready! Click HAPPY, SAD, or ROBOT! 🎉';
+        }, 1000);
+    </script>
+</body>
+</html>
