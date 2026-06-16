@@ -790,6 +790,21 @@
         // RECORDING
         // ============================================
         async function startRecording() {
+			// Clear the comparison display
+			comparisonPlayer.classList.remove('show');
+			
+			// Reset the AI heard and correct displays
+			aiHeardDisplay.textContent = '?';
+			correctDisplay.textContent = '?';
+			
+			// Clear audio sources to prevent old audio from playing
+			yourAudio.src = '';
+			aiHeardAudio.src = '';
+			correctAudio.src = '';
+    
+			// Reset feedback
+			setFeedback("🎤 Recording... Speak clearly!", "info");
+			
             if (isRecording) return;
             
             try {
