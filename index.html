@@ -355,6 +355,57 @@
             display: inline-block;
             margin-left: 10px;
         }
+
+        /* Progress area with clear button */
+        .progress-area {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .progress-header .progress-text {
+            font-weight: bold;
+        }
+
+        .progress-header .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .progress-header .clear-btn:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .progress-bar-container {
+            background: #ddd;
+            border-radius: 25px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-bar {
+            background: #28a745;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
     </style>
 </head>
 <body>
@@ -467,14 +518,18 @@
             </div>
         </div>
 
-        <!-- Progress -->
-        <div style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 10px;">
-            <div style="display: flex; justify-content: space-between;">
-                <span>📊 Your Progress</span>
+        <!-- Progress Area with Clear History Button -->
+        <div class="progress-area">
+            <div class="progress-header">
+                <span class="progress-text">📊 Your Progress</span>
                 <span id="progressText">0%</span>
+                <button class="clear-btn" id="clearHistoryBtn">🗑️ Clear History</button>
             </div>
-            <div style="background: #ddd; border-radius: 25px; height: 20px; overflow: hidden; margin: 10px 0;">
-                <div id="progressBar" style="background: #28a745; height: 100%; width: 0%; transition: width 0.3s;"></div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                <span id="masteredCount">0</span> characters mastered out of <span id="totalCount">15</span>
             </div>
         </div>
 
@@ -482,6 +537,8 @@
             🖌️ Draw → Listen → Record → AI checks your pronunciation!
             <br>
             🎧 After recording, you'll hear: (1) Your voice → (2) What AI heard → (3) Correct pronunciation
+            <br>
+            🗑️ Use "Clear History" to reset your progress and start fresh!
         </footer>
     </div>
 
@@ -532,7 +589,7 @@
         
         let colabUrl = "";
         let debugEnabled = false;
-        let lastResult = null;  // Store last AI result for comparison
+        let lastResult = null;
 
         // ============================================
         // DOM ELEMENTS
@@ -547,6 +604,9 @@
         const undoBtn = document.getElementById('undoBtn');
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
+        const masteredCountSpan = document.getElementById('masteredCount');
+        const totalCountSpan = document.getElementById('totalCount');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
         
         const startRecordBtn = document.getElementById('startRecordBtn');
         const stopRecordBtn = document.getElementById('stopRecordBtn');
@@ -569,6 +629,42 @@
         const correctDisplay = document.getElementById('correctDisplay');
         const playAllBtn = document.getElementById('playAllBtn');
         const playCorrectOnlyBtn = document.getElementById('playCorrectOnlyBtn');
+
+        // ============================================
+        // MASTERED ITEMS (Progress)
+        // ============================================
+        let masteredItems = new Set();
+
+        function updateProgress() {
+            const total = (currentLevel === 1) ? charactersDB.length : phrasesDB.length;
+            const progress = (masteredItems.size / total) * 100;
+            progressBar.style.width = progress + '%';
+            progressText.innerHTML = Math.round(progress) + '%';
+            masteredCountSpan.textContent = masteredItems.size;
+            totalCountSpan.textContent = total;
+        }
+
+        function markCurrentAsMastered() {
+            const key = `${currentLevel}_${currentIndex}`;
+            masteredItems.add(key);
+            updateProgress();
+            if (debugEnabled) debugLog(`✅ Marked as mastered: ${key}`);
+        }
+
+        // ============================================
+        // CLEAR HISTORY FUNCTION
+        // ============================================
+        function clearHistory() {
+            if (confirm('🗑️ Are you sure you want to clear all your progress history?\n\nThis will reset all mastered characters to 0.')) {
+                masteredItems.clear();
+                updateProgress();
+                comparisonPlayer.classList.remove('show');
+                lastResult = null;
+                setFeedback("🗑️ History cleared! Start practicing again!", "info");
+                recordStatusDiv.innerHTML = '⏸️ History cleared. Ready to practice!';
+                if (debugEnabled) debugLog('🗑️ History cleared');
+            }
+        }
 
         // ============================================
         // DEBUG LOGGING
@@ -852,26 +948,31 @@
         // PLAY AUDIO FUNCTIONS
         // ============================================
         function playAudioSequence() {
-            // Play: (1) Your recording → (2) AI heard → (3) Correct
-            
-            // Hide/show elements
             if (!comparisonPlayer.classList.contains('show')) return;
             
-            // Get audio elements
             const yourAudioEl = document.getElementById('yourAudio');
             const aiHeardAudioEl = document.getElementById('aiHeardAudio');
             const correctAudioEl = document.getElementById('correctAudio');
             
-            // Play in sequence
+            // Check if audio elements have source
+            if (!yourAudioEl.src && !aiHeardAudioEl.src && !correctAudioEl.src) {
+                setFeedback("⚠️ No audio to play. Please record first!", "info");
+                return;
+            }
+            
             yourAudioEl.play();
             yourAudioEl.onended = function() {
-                aiHeardAudioEl.play();
-                aiHeardAudioEl.onended = function() {
-                    correctAudioEl.play();
-                    correctAudioEl.onended = function() {
-                        setFeedback("✅ Comparison complete! Practice again if needed.", "info");
+                if (aiHeardAudioEl.src) {
+                    aiHeardAudioEl.play();
+                    aiHeardAudioEl.onended = function() {
+                        if (correctAudioEl.src) {
+                            correctAudioEl.play();
+                            correctAudioEl.onended = function() {
+                                setFeedback("✅ Comparison complete! Practice again if needed.", "info");
+                            };
+                        }
                     };
-                };
+                }
             };
         }
 
@@ -880,6 +981,8 @@
             if (correctAudioEl.src) {
                 correctAudioEl.play();
                 setFeedback("🔊 Playing correct pronunciation...", "info");
+            } else {
+                setFeedback("⚠️ No correct pronunciation available. Record first!", "info");
             }
         }
 
@@ -948,16 +1051,19 @@
                 lastResult = result;
                 
                 if (result.success) {
-                    // Play comparison audio
-                    playComparisonAudio(result);
-                    
                     if (result.correct) {
                         setFeedback(`✅ ${result.message}`, "correct");
                         recordStatusDiv.innerHTML = '🎉 Perfect! Great job!';
+                        // Auto-mark as mastered if correct
+                        markCurrentAsMastered();
                     } else {
                         setFeedback(`❌ ${result.message}`, "incorrect");
                         recordStatusDiv.innerHTML = `💡 Listen to the comparison above and practice!`;
                     }
+                    
+                    // Play comparison audio
+                    playComparisonAudio(result);
+                    
                 } else {
                     if (debugEnabled) debugLog(`❌ API error: ${result.error}`);
                     setFeedback(`❌ AI Error: ${result.error}`, "incorrect");
@@ -972,7 +1078,7 @@
         }
 
         // ============================================
-        // PLAY COMPARISON AUDIO (Your Voice → AI Heard → Correct)
+        // PLAY COMPARISON AUDIO
         // ============================================
         function playComparisonAudio(result) {
             // Create audio URL from the recording blob
@@ -980,7 +1086,6 @@
             
             // Set up audio elements
             document.getElementById('yourAudio').src = yourAudioUrl;
-            document.getElementById('yourAudio').onended = null;
             
             // Display what AI heard
             const aiHeard = result.heard || "?";
@@ -990,60 +1095,51 @@
             const expected = result.expected || "?";
             correctDisplay.textContent = expected;
             
-            // Create correct pronunciation audio
+            // Use Web Speech API for AI heard and correct pronunciation
             const correctText = (currentLevel === 1) ? currentData.char : currentData.phrase;
             
-            // We'll use Web Speech API for the correct pronunciation
-            // Convert to audio using SpeechSynthesis
-            const utterance = new SpeechSynthesisUtterance(correctText);
-            utterance.lang = 'zh-CN';
-            utterance.rate = 0.7;
+            // Create audio for AI heard text
+            const aiHeardUtterance = new SpeechSynthesisUtterance(aiHeard);
+            aiHeardUtterance.lang = 'zh-CN';
+            aiHeardUtterance.rate = 0.7;
             
-            // We need to create a MediaStream from the speech synthesis
-            // Unfortunately, SpeechSynthesis doesn't directly provide a stream
-            // We'll use a different approach: play the AI heard text and correct text
-            // using SpeechSynthesis and let the user click play
+            // Create audio for correct text
+            const correctUtterance = new SpeechSynthesisUtterance(correctText);
+            correctUtterance.lang = 'zh-CN';
+            correctUtterance.rate = 0.7;
+            
+            // We need to create audio elements from speech synthesis
+            // Since this is complex, we'll use speak buttons instead
+            // But we want to keep the audio elements for consistency
             
             // Show the comparison player
             comparisonPlayer.classList.add('show');
             
-            // For the "AI heard" audio, use SpeechSynthesis to speak the AI heard text
-            const aiHeardText = aiHeard;
-            
-            // Store the AI heard text for the audio element
-            // We can't directly put SpeechSynthesis into an audio element
-            // So we'll use a click handler that speaks the text
-            const aiAudioEl = document.getElementById('aiHeardAudio');
-            const correctAudioEl = document.getElementById('correctAudio');
-            
-            // Set up click handlers instead of audio elements
-            aiAudioEl.style.display = 'none';
-            correctAudioEl.style.display = 'none';
-            
-            // Add custom buttons
-            const aiHeardContainer = document.getElementById('aiHeardDisplay').parentElement;
+            // Create speak buttons for AI heard and correct
+            const aiContainer = document.getElementById('aiHeardDisplay').parentElement;
             const correctContainer = document.getElementById('correctDisplay').parentElement;
             
-            // Remove existing buttons if any
-            const existingAiBtn = aiHeardContainer.querySelector('.speak-btn');
-            const existingCorrectBtn = correctContainer.querySelector('.speak-btn');
+            // Remove existing buttons
+            const existingAiBtn = aiContainer.querySelector('.speak-btn-ai');
+            const existingCorrectBtn = correctContainer.querySelector('.speak-btn-correct');
             if (existingAiBtn) existingAiBtn.remove();
             if (existingCorrectBtn) existingCorrectBtn.remove();
             
-            // Add speak buttons
+            // Add speak button for AI heard
             const aiSpeakBtn = document.createElement('button');
-            aiSpeakBtn.className = 'btn btn-info';
+            aiSpeakBtn.className = 'btn btn-info speak-btn-ai';
             aiSpeakBtn.textContent = '🔊 Play AI Heard';
             aiSpeakBtn.style.fontSize = '12px';
             aiSpeakBtn.style.padding = '5px 15px';
             aiSpeakBtn.style.marginTop = '5px';
             aiSpeakBtn.onclick = function() {
-                speakText(aiHeardText);
+                speakText(aiHeard);
             };
-            aiHeardContainer.appendChild(aiSpeakBtn);
+            aiContainer.appendChild(aiSpeakBtn);
             
+            // Add speak button for correct
             const correctSpeakBtn = document.createElement('button');
-            correctSpeakBtn.className = 'btn btn-success';
+            correctSpeakBtn.className = 'btn btn-success speak-btn-correct';
             correctSpeakBtn.textContent = '🔊 Play Correct';
             correctSpeakBtn.style.fontSize = '12px';
             correctSpeakBtn.style.padding = '5px 15px';
@@ -1055,13 +1151,10 @@
             
             // Update Play All button
             playAllBtn.onclick = function() {
-                // Play your recording first
                 const yourAudioEl = document.getElementById('yourAudio');
                 yourAudioEl.play();
                 yourAudioEl.onended = function() {
-                    // Then speak AI heard
-                    speakText(aiHeardText, function() {
-                        // Then speak correct
+                    speakText(aiHeard, function() {
                         speakText(correctText);
                     });
                 };
@@ -1074,8 +1167,9 @@
             
             // Auto-play the sequence after a short delay
             setTimeout(() => {
-                playAllBtn.click();
-            }, 1000);
+                // Show a message instead of auto-playing
+                setFeedback("🎧 Click 'Play All' to hear your voice → AI heard → Correct", "info");
+            }, 500);
         }
 
         // ============================================
@@ -1130,17 +1224,6 @@
         }
 
         // ============================================
-        // PROGRESS
-        // ============================================
-        let masteredItems = new Set();
-        function updateProgress() {
-            const total = (currentLevel === 1) ? charactersDB.length : phrasesDB.length;
-            const progress = (masteredItems.size / total) * 100;
-            progressBar.style.width = progress + '%';
-            progressText.innerHTML = Math.round(progress) + '%';
-        }
-
-        // ============================================
         // INIT
         // ============================================
         function init() {
@@ -1175,6 +1258,9 @@
             startRecordBtn.addEventListener('click', startRecording);
             stopRecordBtn.addEventListener('click', stopRecording);
             testMicBtn.addEventListener('click', testMicrophone);
+            
+            // Clear History button
+            clearHistoryBtn.addEventListener('click', clearHistory);
             
             // Colab connection
             connectColabBtn.addEventListener('click', () => {
