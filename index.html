@@ -235,11 +235,6 @@
             color: #0c5460;
         }
 
-        .feedback.recording {
-            background: #ffeaa7;
-            color: #d63031;
-        }
-
         .feedback.loading {
             background: #cce5ff;
             color: #004085;
@@ -300,6 +295,66 @@
             text-align: left;
             display: none;
         }
+
+        /* Comparison player */
+        .comparison-player {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            display: none;
+        }
+
+        .comparison-player.show {
+            display: block;
+        }
+
+        .comparison-item {
+            margin: 10px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .comparison-item .label {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .comparison-item .label.correct {
+            color: #28a745;
+        }
+
+        .comparison-item .label.yourself {
+            color: #17a2b8;
+        }
+
+        .comparison-item .label.ai-heard {
+            color: #6f42c1;
+        }
+
+        .comparison-item audio {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .comparison-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .comparison-character {
+            font-size: 32px;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -353,15 +408,38 @@
                     <div id="recordStatus" style="margin-top: 10px; font-size: 12px; color: #666;">
                         ⏸️ Click "Start Recording" and say the character!
                     </div>
-                    
-                    <div id="audioPlayerArea" style="margin-top: 10px; display: none;">
-                        <audio id="audioPlayback" controls></audio>
+
+                    <!-- Comparison Player -->
+                    <div id="comparisonPlayer" class="comparison-player">
+                        <h4 style="text-align: center; margin-bottom: 10px;">🎧 Compare Your Pronunciation</h4>
+                        
+                        <div class="comparison-item">
+                            <span class="label yourself">🎙️ 1. You said (your recording):</span>
+                            <audio id="yourAudio" controls></audio>
+                        </div>
+                        
+                        <div class="comparison-item">
+                            <span class="label ai-heard">🤖 2. AI heard this character:</span>
+                            <span id="aiHeardDisplay" class="comparison-character">?</span>
+                            <audio id="aiHeardAudio" controls></audio>
+                        </div>
+                        
+                        <div class="comparison-item">
+                            <span class="label correct">✅ 3. Correct pronunciation (you should say):</span>
+                            <span id="correctDisplay" class="comparison-character">?</span>
+                            <audio id="correctAudio" controls></audio>
+                        </div>
+                        
+                        <div class="comparison-buttons">
+                            <button class="btn btn-success" id="playAllBtn">▶️ Play All (1 → 2 → 3)</button>
+                            <button class="btn btn-primary" id="playCorrectOnlyBtn">🔊 Play Correct Only</button>
+                        </div>
                     </div>
 
                     <!-- Colab URL Setting -->
                     <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 10px;">
                         <label style="font-size: 12px; font-weight: bold; color: #333;">☁️ Colab API URL:</label>
-                        <input type="text" id="colabUrlInput" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px;" placeholder="https://kempt-postnuptially-tarah.ngrok-free.dev/check">
+                        <input type="text" id="colabUrlInput" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px;" placeholder="https://YOUR_NGROK_URL.ngrok-free.dev/check">
                         <div style="margin-top: 5px;">
                             <button class="btn btn-primary" id="connectColabBtn" style="font-size: 12px; padding: 5px 15px;">🔗 Connect</button>
                             <button class="btn btn-secondary" id="saveUrlBtn" style="font-size: 12px; padding: 5px 15px;">💾 Save URL</button>
@@ -401,9 +479,9 @@
         </div>
 
         <footer>
-            🖌️ Draw → Listen → Record → AI checks your pronunciation instantly!
+            🖌️ Draw → Listen → Record → AI checks your pronunciation!
             <br>
-            💡 The Colab URL is saved automatically. Mic permission is required once per session.
+            🎧 After recording, you'll hear: (1) Your voice → (2) What AI heard → (3) Correct pronunciation
         </footer>
     </div>
 
@@ -454,6 +532,7 @@
         
         let colabUrl = "";
         let debugEnabled = false;
+        let lastResult = null;  // Store last AI result for comparison
 
         // ============================================
         // DOM ELEMENTS
@@ -473,8 +552,6 @@
         const stopRecordBtn = document.getElementById('stopRecordBtn');
         const testMicBtn = document.getElementById('testMicBtn');
         const recordStatusDiv = document.getElementById('recordStatus');
-        const audioPlayerArea = document.getElementById('audioPlayerArea');
-        const audioPlayback = document.getElementById('audioPlayback');
         const colabUrlInput = document.getElementById('colabUrlInput');
         const connectColabBtn = document.getElementById('connectColabBtn');
         const saveUrlBtn = document.getElementById('saveUrlBtn');
@@ -482,6 +559,16 @@
         const debugConsole = document.getElementById('debugConsole');
         const debugOutput = document.getElementById('debugOutput');
         const debugToggleBtn = document.getElementById('debugToggleBtn');
+
+        // Comparison elements
+        const comparisonPlayer = document.getElementById('comparisonPlayer');
+        const yourAudio = document.getElementById('yourAudio');
+        const aiHeardAudio = document.getElementById('aiHeardAudio');
+        const correctAudio = document.getElementById('correctAudio');
+        const aiHeardDisplay = document.getElementById('aiHeardDisplay');
+        const correctDisplay = document.getElementById('correctDisplay');
+        const playAllBtn = document.getElementById('playAllBtn');
+        const playCorrectOnlyBtn = document.getElementById('playCorrectOnlyBtn');
 
         // ============================================
         // DEBUG LOGGING
@@ -557,22 +644,32 @@
             counterSpan.innerHTML = `Item ${currentIndex + 1} / ${total}`;
             clearCanvas();
             resetRecordingUI();
+            comparisonPlayer.classList.remove('show');
+            lastResult = null;
             updateProgress();
             if (debugEnabled) debugLog(`📖 Displayed: ${currentData.char || currentData.phrase}`);
         }
 
         // ============================================
-        // LISTEN
+        // TEXT-TO-SPEECH (LISTEN)
         // ============================================
+        function speakText(text, callback) {
+            if (!text) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.7;
+            if (callback) {
+                utterance.onend = callback;
+            }
+            window.speechSynthesis.speak(utterance);
+        }
+
         function listenToCharacter() {
             if (!currentData) return;
             let textToSpeak = (currentLevel === 1) ? currentData.char : currentData.phrase;
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = 'zh-CN';
-            utterance.rate = 0.8;
-            window.speechSynthesis.speak(utterance);
-            if (debugEnabled) debugLog(`🔊 Speaking: ${textToSpeak}`);
+            speakText(textToSpeak);
+            setFeedback("🔊 Playing correct pronunciation...", "info");
         }
 
         // ============================================
@@ -666,9 +763,6 @@
                 mediaRecorder.onstop = () => {
                     const blobType = mimeType || 'audio/wav';
                     recordedBlob = new Blob(audioChunks, { type: blobType });
-                    const audioUrl = URL.createObjectURL(recordedBlob);
-                    audioPlayback.src = audioUrl;
-                    audioPlayerArea.style.display = 'block';
                     
                     if (stream) {
                         stream.getTracks().forEach(track => track.stop());
@@ -748,12 +842,45 @@
         }
         
         function resetRecordingUI() {
-            audioPlayerArea.style.display = 'none';
             recordedBlob = null;
-            audioPlayback.src = '';
             startRecordBtn.disabled = false;
             stopRecordBtn.disabled = true;
             recordStatusDiv.innerHTML = '⏸️ Click "Start Recording" and say the character!';
+        }
+
+        // ============================================
+        // PLAY AUDIO FUNCTIONS
+        // ============================================
+        function playAudioSequence() {
+            // Play: (1) Your recording → (2) AI heard → (3) Correct
+            
+            // Hide/show elements
+            if (!comparisonPlayer.classList.contains('show')) return;
+            
+            // Get audio elements
+            const yourAudioEl = document.getElementById('yourAudio');
+            const aiHeardAudioEl = document.getElementById('aiHeardAudio');
+            const correctAudioEl = document.getElementById('correctAudio');
+            
+            // Play in sequence
+            yourAudioEl.play();
+            yourAudioEl.onended = function() {
+                aiHeardAudioEl.play();
+                aiHeardAudioEl.onended = function() {
+                    correctAudioEl.play();
+                    correctAudioEl.onended = function() {
+                        setFeedback("✅ Comparison complete! Practice again if needed.", "info");
+                    };
+                };
+            };
+        }
+
+        function playCorrectOnly() {
+            const correctAudioEl = document.getElementById('correctAudio');
+            if (correctAudioEl.src) {
+                correctAudioEl.play();
+                setFeedback("🔊 Playing correct pronunciation...", "info");
+            }
         }
 
         // ============================================
@@ -800,14 +927,14 @@
             try {
                 if (debugEnabled) debugLog('📡 Making fetch request...');
                 
-				const response = await fetch(colabUrl, {
-					method: "POST",
-					headers: {
-						'ngrok-skip-browser-warning': 'true'
-					},
-					body: formData
-				});
-              
+                const response = await fetch(colabUrl, {
+                    method: "POST",
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: formData
+                });
+                
                 if (debugEnabled) debugLog(`📥 Response status: ${response.status}`);
                 
                 if (!response.ok) {
@@ -818,14 +945,18 @@
                 
                 const result = await response.json();
                 if (debugEnabled) debugLog('✅ Response data:', result);
+                lastResult = result;
                 
                 if (result.success) {
+                    // Play comparison audio
+                    playComparisonAudio(result);
+                    
                     if (result.correct) {
                         setFeedback(`✅ ${result.message}`, "correct");
                         recordStatusDiv.innerHTML = '🎉 Perfect! Great job!';
                     } else {
                         setFeedback(`❌ ${result.message}`, "incorrect");
-                        recordStatusDiv.innerHTML = `💡 AI heard "${result.heard}", expected "${result.expected}"`;
+                        recordStatusDiv.innerHTML = `💡 Listen to the comparison above and practice!`;
                     }
                 } else {
                     if (debugEnabled) debugLog(`❌ API error: ${result.error}`);
@@ -838,6 +969,113 @@
                 setFeedback(`❌ Could not connect to Colab: ${error.message}`, "incorrect");
                 recordStatusDiv.innerHTML = '❌ Connection error. Make sure Colab is running!';
             }
+        }
+
+        // ============================================
+        // PLAY COMPARISON AUDIO (Your Voice → AI Heard → Correct)
+        // ============================================
+        function playComparisonAudio(result) {
+            // Create audio URL from the recording blob
+            const yourAudioUrl = URL.createObjectURL(recordedBlob);
+            
+            // Set up audio elements
+            document.getElementById('yourAudio').src = yourAudioUrl;
+            document.getElementById('yourAudio').onended = null;
+            
+            // Display what AI heard
+            const aiHeard = result.heard || "?";
+            aiHeardDisplay.textContent = aiHeard;
+            
+            // Show correct character
+            const expected = result.expected || "?";
+            correctDisplay.textContent = expected;
+            
+            // Create correct pronunciation audio
+            const correctText = (currentLevel === 1) ? currentData.char : currentData.phrase;
+            
+            // We'll use Web Speech API for the correct pronunciation
+            // Convert to audio using SpeechSynthesis
+            const utterance = new SpeechSynthesisUtterance(correctText);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.7;
+            
+            // We need to create a MediaStream from the speech synthesis
+            // Unfortunately, SpeechSynthesis doesn't directly provide a stream
+            // We'll use a different approach: play the AI heard text and correct text
+            // using SpeechSynthesis and let the user click play
+            
+            // Show the comparison player
+            comparisonPlayer.classList.add('show');
+            
+            // For the "AI heard" audio, use SpeechSynthesis to speak the AI heard text
+            const aiHeardText = aiHeard;
+            
+            // Store the AI heard text for the audio element
+            // We can't directly put SpeechSynthesis into an audio element
+            // So we'll use a click handler that speaks the text
+            const aiAudioEl = document.getElementById('aiHeardAudio');
+            const correctAudioEl = document.getElementById('correctAudio');
+            
+            // Set up click handlers instead of audio elements
+            aiAudioEl.style.display = 'none';
+            correctAudioEl.style.display = 'none';
+            
+            // Add custom buttons
+            const aiHeardContainer = document.getElementById('aiHeardDisplay').parentElement;
+            const correctContainer = document.getElementById('correctDisplay').parentElement;
+            
+            // Remove existing buttons if any
+            const existingAiBtn = aiHeardContainer.querySelector('.speak-btn');
+            const existingCorrectBtn = correctContainer.querySelector('.speak-btn');
+            if (existingAiBtn) existingAiBtn.remove();
+            if (existingCorrectBtn) existingCorrectBtn.remove();
+            
+            // Add speak buttons
+            const aiSpeakBtn = document.createElement('button');
+            aiSpeakBtn.className = 'btn btn-info';
+            aiSpeakBtn.textContent = '🔊 Play AI Heard';
+            aiSpeakBtn.style.fontSize = '12px';
+            aiSpeakBtn.style.padding = '5px 15px';
+            aiSpeakBtn.style.marginTop = '5px';
+            aiSpeakBtn.onclick = function() {
+                speakText(aiHeardText);
+            };
+            aiHeardContainer.appendChild(aiSpeakBtn);
+            
+            const correctSpeakBtn = document.createElement('button');
+            correctSpeakBtn.className = 'btn btn-success';
+            correctSpeakBtn.textContent = '🔊 Play Correct';
+            correctSpeakBtn.style.fontSize = '12px';
+            correctSpeakBtn.style.padding = '5px 15px';
+            correctSpeakBtn.style.marginTop = '5px';
+            correctSpeakBtn.onclick = function() {
+                speakText(correctText);
+            };
+            correctContainer.appendChild(correctSpeakBtn);
+            
+            // Update Play All button
+            playAllBtn.onclick = function() {
+                // Play your recording first
+                const yourAudioEl = document.getElementById('yourAudio');
+                yourAudioEl.play();
+                yourAudioEl.onended = function() {
+                    // Then speak AI heard
+                    speakText(aiHeardText, function() {
+                        // Then speak correct
+                        speakText(correctText);
+                    });
+                };
+            };
+            
+            // Play Correct Only button
+            playCorrectOnlyBtn.onclick = function() {
+                speakText(correctText);
+            };
+            
+            // Auto-play the sequence after a short delay
+            setTimeout(() => {
+                playAllBtn.click();
+            }, 1000);
         }
 
         // ============================================
@@ -910,7 +1148,7 @@
             displayLesson();
             
             // ============================================
-            // FIX: AUTO-LOAD SAVED COLAB URL
+            // AUTO-LOAD SAVED COLAB URL
             // ============================================
             const savedUrl = localStorage.getItem('colabUrl');
             if (savedUrl) {
@@ -919,13 +1157,11 @@
                 updateColabStatus(true);
                 if (debugEnabled) debugLog(`💾 Loaded saved URL: ${savedUrl}`);
                 
-                // Auto-connect after a short delay
                 setTimeout(() => {
                     connectColabBtn.click();
                     if (debugEnabled) debugLog('🔗 Auto-connected to Colab');
                 }, 500);
             } else {
-                // No saved URL - show a helpful message
                 recordStatusDiv.innerHTML = '💡 Enter your Colab URL and click "Connect"';
                 setFeedback("💡 Enter your Colab URL from the Colab notebook!", "info");
             }
@@ -949,8 +1185,6 @@
                     recordStatusDiv.innerHTML = '✅ Connected to Colab! Ready to record.';
                     setFeedback("✅ Connected to Colab AI! Record and check pronunciation automatically.", "info");
                     if (debugEnabled) debugLog(`🔗 Connected to Colab: ${colabUrl}`);
-                    
-                    // Save URL
                     localStorage.setItem('colabUrl', colabUrl);
                     if (debugEnabled) debugLog('💾 URL saved to localStorage');
                 } else {
