@@ -800,11 +800,14 @@
             try {
                 if (debugEnabled) debugLog('📡 Making fetch request...');
                 
-                const response = await fetch(colabUrl, {
-                    method: "POST",
-                    body: formData
-                });
-                
+				const response = await fetch(colabUrl, {
+					method: "POST",
+					headers: {
+						'ngrok-skip-browser-warning': 'true'
+					},
+					body: formData
+				});
+               
                 if (debugEnabled) debugLog(`📥 Response status: ${response.status}`);
                 
                 if (!response.ok) {
